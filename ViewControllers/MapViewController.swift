@@ -36,7 +36,17 @@ class MapViewController: UIViewController {
     
     private func setUpUI() {
         
+        view.addSubview(searchTextField)
         view.addSubview(mapView)
+        
+        view.bringSubviewToFront(searchTextField)
+        
+        // add constraints to search text field
+        searchTextField.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        searchTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        searchTextField.widthAnchor.constraint(equalToConstant: view.bounds.size.width / 1.2).isActive = true
+        searchTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 60).isActive = true
+        searchTextField.returnKeyType = .go
         
         // add constraints to the mapView
         mapView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
