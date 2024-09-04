@@ -83,6 +83,22 @@ class MapViewController: UIViewController {
         }
     }
     
+    private func presentPlacesSheet(places: [PlaceAnnotation]) {
+        
+        guard let locationManager = locationManager,
+              let userLocation = locationManager.location
+        else { return }
+        
+        let placeTVC = PlacesTableViewController(userLocation: userLocation, places: places)
+        placeTVC.modalPresentationStyle = .pageSheet
+        
+        if let sheet = placeTVC.sheetPresentationController {
+            sheet.prefersGrabberVisible = true
+            sheet.detents = [.medium(), .large()]
+            present(placeTVC, animated: true)
+        }
+    }
+    
     private func findNearbyPlaces(by query: String) {
         
         // clear all annotations
@@ -90,11 +106,19 @@ class MapViewController: UIViewController {
         
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
+        request.region = mapView.region
         
         let search = MKLocalSearch(request: request)
-        search.start { response, error in
+        search.start { [weak self] response, error in
             guard let response = response, error == nil else { return }
-            print(response.mapItems)
+            
+            let places = response.mapItems.map(PlaceAnnotation.init)
+            
+            places.forEach { place in
+                self?.mapView.addAnnotation(place)
+            }
+            
+            self?.presentPlacesSheet(places: places)
         }
     }
 }
