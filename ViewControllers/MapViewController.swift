@@ -11,7 +11,7 @@ import MapKit
 class MapViewController: UIViewController {
     
     var locationManager: CLLocationManager?
-
+    
     lazy var mapView: MKMapView = {
         let map = MKMapView()
         // map.showUserLocation = true
@@ -22,6 +22,7 @@ class MapViewController: UIViewController {
     lazy var searchTextField: UITextField = {
         let searchTextField = UITextField()
         searchTextField.layer.cornerRadius = 10
+        searchTextField.delegate = self
         searchTextField.clipsToBounds = true
         searchTextField.backgroundColor = UIColor.white
         searchTextField.placeholder = "Search"
@@ -80,6 +81,35 @@ class MapViewController: UIViewController {
         @unknown default:
             print("Unknown error. Unable to get location.")
         }
+    }
+    
+    private func findNearbyPlaces(by query: String) {
+        
+        // clear all annotations
+        mapView.removeAnnotations(mapView.annotations)
+        
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        
+        let search = MKLocalSearch(request: request)
+        search.start { response, error in
+            guard let response = response, error == nil else { return }
+            print(response.mapItems)
+        }
+    }
+}
+
+extension MapViewController: UITextFieldDelegate {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        let text = textField.text ?? ""
+        if !text.isEmpty {
+            textField.resignFirstResponder()
+            // find nearby places
+            findNearbyPlaces(by: text)
+        }
+        
+        return true
     }
 }
 
