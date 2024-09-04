@@ -9,6 +9,8 @@ import UIKit
 import MapKit
 
 class MapViewController: UIViewController {
+    
+    var locationManager: CLLocationManager?
 
     lazy var mapView: MKMapView = {
         let map = MKMapView()
@@ -31,6 +33,14 @@ class MapViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // initialize location manager
+        locationManager = CLLocationManager()
+        locationManager?.delegate = self
+        
+        locationManager?.requestWhenInUseAuthorization()
+        locationManager?.requestLocation()
+        
         setUpUI()
     }
     
@@ -54,5 +64,36 @@ class MapViewController: UIViewController {
         mapView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         mapView.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
     }
+    
+    private func checkLocationAuthorization() {
+        guard let locationManager = locationManager,
+              let location = locationManager.location else { return }
+        
+        switch locationManager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            let region = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: 750, longitudinalMeters: 750)
+            mapView.setRegion(region, animated: true)
+        case .notDetermined, .restricted:
+            print("Location cannot be determined or restricted.")
+        case .denied:
+            print("Location services has been denied.")
+        @unknown default:
+            print("Unknown error. Unable to get location.")
+        }
+    }
 }
 
+extension MapViewController: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        checkLocationAuthorization()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
+        
+    }
+}
