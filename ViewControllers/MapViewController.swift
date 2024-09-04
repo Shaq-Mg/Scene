@@ -11,10 +11,12 @@ import MapKit
 class MapViewController: UIViewController {
     
     var locationManager: CLLocationManager?
+    private var places = [PlaceAnnotation]()
     
     lazy var mapView: MKMapView = {
         let map = MKMapView()
-        // map.showUserLocation = true
+        map.delegate = self
+        map.showsUserLocation = true
         map.translatesAutoresizingMaskIntoConstraints = false
         return map
     }()
@@ -110,15 +112,17 @@ class MapViewController: UIViewController {
         
         let search = MKLocalSearch(request: request)
         search.start { [weak self] response, error in
+            
             guard let response = response, error == nil else { return }
             
-            let places = response.mapItems.map(PlaceAnnotation.init)
-            
-            places.forEach { place in
+            self?.places = response.mapItems.map(PlaceAnnotation.init)
+            self?.places.forEach { place in
                 self?.mapView.addAnnotation(place)
             }
             
-            self?.presentPlacesSheet(places: places)
+            if let places = self?.places {
+                self?.presentPlacesSheet(places: places)
+            }
         }
     }
 }
@@ -134,6 +138,17 @@ extension MapViewController: UITextFieldDelegate {
         }
         
         return true
+    }
+}
+
+extension MapViewController: MKMapViewDelegate {
+    
+    func mapView(_ mapView: MKMapView, didSelect annotation: any MKAnnotation) {
+        guard let selectionAnnontation = annotation as? PlaceAnnotation else { return }
+        let placeAnnotation = self.places.first(where: { $0.id == selectionAnnontation.id })
+        placeAnnotation?.isSelected = true
+        
+        presentPlacesSheet(places: self.places)
     }
 }
 
